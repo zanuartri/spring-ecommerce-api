@@ -2,8 +2,10 @@ package com.zanuar.ecommerce.config;
 
 import com.zanuar.ecommerce.domain.Category;
 import com.zanuar.ecommerce.domain.Product;
+import com.zanuar.ecommerce.domain.User;
 import com.zanuar.ecommerce.repository.CategoryRepository;
 import com.zanuar.ecommerce.repository.ProductRepository;
+import com.zanuar.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +18,20 @@ public class DataInitializer implements CommandLineRunner {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void run(String... args) {
+
+        if (userRepository.count() == 0) {
+            User user = new User();
+            user.setEmail("user@test.com");
+            user.setPassword("password"); // will be encoded later
+            user.setRole("USER");
+
+            userRepository.save(user);
+        }
+
         if (categoryRepository.count() > 0) {
             return;
         }
