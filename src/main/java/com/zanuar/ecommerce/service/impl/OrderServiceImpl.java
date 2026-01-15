@@ -4,6 +4,7 @@ import com.zanuar.ecommerce.domain.Order;
 import com.zanuar.ecommerce.domain.OrderItem;
 import com.zanuar.ecommerce.domain.Product;
 import com.zanuar.ecommerce.domain.User;
+import com.zanuar.ecommerce.domain.entity.OrderStatus;
 import com.zanuar.ecommerce.dto.request.CreateOrderRequest;
 import com.zanuar.ecommerce.dto.request.OrderItemRequest;
 import com.zanuar.ecommerce.repository.OrderItemRepository;
@@ -11,6 +12,7 @@ import com.zanuar.ecommerce.repository.OrderRepository;
 import com.zanuar.ecommerce.repository.ProductRepository;
 import com.zanuar.ecommerce.repository.UserRepository;
 import com.zanuar.ecommerce.service.OrderService;
+import com.zanuar.ecommerce.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -37,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setStatus("CREATED");
+        order.setStatus(OrderStatus.CREATED);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
@@ -75,4 +78,26 @@ public class OrderServiceImpl implements OrderService {
 
         return savedOrder.getId();
     }
+
+    @Override
+    @Transactional
+    public void payOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.CREATED) {
+            throw new RuntimeException("Order cannot be paid");
+        }
+
+        boolean paymentSuccess = paymentService.pay(orderId);
+
+        if (!paymentSuccess) {
+            throw new RuntimeException("Payment failed");
+        }
+
+        order.setStatus(OrderStatus.PAID);
+        orderRepository.save(order);
+    }
+
 }

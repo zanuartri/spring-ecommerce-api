@@ -5,4 +5,7 @@ import com.zanuar.ecommerce.dto.request.CreateOrderRequest;
 public interface OrderService {
 
     Long createOrder(CreateOrderRequest request);
+
+    void payOrder(Long orderId);
+
 }
