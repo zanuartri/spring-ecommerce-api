@@ -8,6 +8,8 @@ import com.zanuar.ecommerce.repository.CategoryRepository;
 import com.zanuar.ecommerce.repository.ProductRepository;
 import com.zanuar.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse create(CreateProductRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
@@ -36,6 +39,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(
+            value = "products",
+            key = "#id",
+            sync = true
+    )
     public ProductResponse getById(Long id) {
         return productRepository.findById(id)
                 .map(this::toResponse)
@@ -43,6 +51,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable("products")
     public List<ProductResponse> getAll() {
         return productRepository.findByActiveTrue()
                 .stream()
