@@ -7,6 +7,8 @@ import com.zanuar.ecommerce.domain.User;
 import com.zanuar.ecommerce.domain.entity.OrderStatus;
 import com.zanuar.ecommerce.dto.request.CreateOrderRequest;
 import com.zanuar.ecommerce.dto.request.OrderItemRequest;
+import com.zanuar.ecommerce.exception.BadRequestException;
+import com.zanuar.ecommerce.exception.ResourceNotFoundException;
 import com.zanuar.ecommerce.repository.OrderItemRepository;
 import com.zanuar.ecommerce.repository.OrderRepository;
 import com.zanuar.ecommerce.repository.ProductRepository;
@@ -36,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
     public Long createOrder(CreateOrderRequest request) {
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Order order = new Order();
         order.setUser(user);
@@ -48,10 +50,10 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemRequest itemRequest : request.getItems()) {
 
             Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             if (product.getStock() < itemRequest.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product: " + product.getName());
+                throw new BadRequestException("Insufficient stock for product: " + product.getName());
             }
 
             // reduce stock
@@ -84,16 +86,18 @@ public class OrderServiceImpl implements OrderService {
     public void payOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
 
         if (order.getStatus() != OrderStatus.CREATED) {
-            throw new RuntimeException("Order cannot be paid");
+            throw new BadRequestException("Order cannot be paid");
+
         }
 
         boolean paymentSuccess = paymentService.pay(orderId);
 
         if (!paymentSuccess) {
-            throw new RuntimeException("Payment failed");
+            throw new BadRequestException("Payment failed");
         }
 
         order.setStatus(OrderStatus.PAID);

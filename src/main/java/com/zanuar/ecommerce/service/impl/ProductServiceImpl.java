@@ -4,6 +4,7 @@ import com.zanuar.ecommerce.domain.Category;
 import com.zanuar.ecommerce.domain.Product;
 import com.zanuar.ecommerce.dto.request.CreateProductRequest;
 import com.zanuar.ecommerce.dto.response.ProductResponse;
+import com.zanuar.ecommerce.exception.ResourceNotFoundException;
 import com.zanuar.ecommerce.repository.CategoryRepository;
 import com.zanuar.ecommerce.repository.ProductRepository;
 import com.zanuar.ecommerce.service.ProductService;
@@ -25,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(value = "products", allEntries = true)
     public ProductResponse create(CreateProductRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Product product = new Product();
         product.setName(request.getName());
@@ -47,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getById(Long id) {
         return productRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 
     @Override
