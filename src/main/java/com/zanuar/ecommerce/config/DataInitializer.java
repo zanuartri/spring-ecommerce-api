@@ -9,6 +9,7 @@ import com.zanuar.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 
@@ -19,6 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
@@ -26,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.count() == 0) {
             User user = new User();
             user.setEmail("user@test.com");
-            user.setPassword("password"); // will be encoded later
+            user.setPassword(passwordEncoder.encode("password"));
             user.setRole("USER");
 
             userRepository.save(user);
